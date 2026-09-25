@@ -1,0 +1,109 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+  --font-display: "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Sans Arabic", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-bg: #f3efe6;
+  --color-surface: #fffcf7;
+  --color-surface-2: #ece6d9;
+  --color-ink: #1a1916;
+  --color-muted: #6d685f;
+  --color-subtle: #8f8a80;
+  --color-line: #ddd6c8;
+  --color-primary: #1f4a40;
+  --color-primary-fg: #f6f3ea;
+  --color-accent: #2c5c50;
+  --color-gain: #2c6a4a;
+  --color-gain-soft: #e4f0e6;
+  --color-loss: #9a3b32;
+  --color-loss-soft: #f6e4e0;
+  --color-warn: #8a5a22;
+  --color-warn-soft: #f3ead4;
+
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary-foreground: var(--color-primary-fg);
+  --color-secondary: var(--color-surface-2);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted-foreground: var(--color-muted);
+  --color-accent-foreground: var(--color-primary-fg);
+  --color-destructive: var(--color-loss);
+  --color-destructive-foreground: #fff8f6;
+  --color-border: var(--color-line);
+  --color-input: var(--color-line);
+  --color-ring: var(--color-primary);
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius: 0.75rem;
+
+  --shadow-card: 0 0 0 1px rgba(26, 25, 22, 0.05), 0 1px 2px rgba(26, 25, 22, 0.04),
+    0 8px 24px rgba(26, 25, 22, 0.04);
+  --shadow-lift: 0 0 0 1px rgba(26, 25, 22, 0.07), 0 10px 28px rgba(26, 25, 22, 0.08);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    border-color: var(--color-line);
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.03em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
