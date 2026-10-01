@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1f4a40" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="دفتر المقاول" />
+  <meta name="description" content="حسابات شركات المقاولات والتشطيبات الصغيرة — عملاء، مشاريع، دفعات، مصروفات، قائمة دخل وميزانية." />
+  <title>دفتر المقاول</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --surface: #fffcf7;
+      --surface-2: #ece6d9;
+      --ink: #1a1916;
+      --muted: #6d685f;
+      --subtle: #8f8a80;
+      --line: #ddd6c8;
+      --primary: #1f4a40;
+      --primary-fg: #f6f3ea;
+      --gain: #2c6a4a;
+      --gain-soft: #e4f0e6;
+      --loss: #9a3b32;
+      --loss-soft: #f6e4e0;
+      --warn: #8a5a22;
+      --warn-soft: #f3ead4;
+      --shadow: 0 0 0 1px rgba(26,25,22,.05), 0 1px 2px rgba(26,25,22,.04), 0 8px 24px rgba(26,25,22,.04);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button:not(:disabled), [role="button"] { cursor: pointer; }
+    button { font-family: inherit; }
+    input, select, textarea { font-family: inherit; }
+    a { color: inherit; text-decoration: none; }
+    .app { max-width: 32rem; margin: 0 auto; min-height: 100dvh; background: var(--bg); position: relative; }
+    .page { padding-bottom: calc(4.85rem + var(--safe-b)); }
+    header.top {
+      position: sticky; top: 0; z-index: 20;
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+      padding: .75rem 1rem;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem;
+    }
+    header.top h1 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -.02em; }
+    header.top p { margin: .15rem 0 0; font-size: .875rem; color: var(--muted); }
+    .content { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: var(--surface); border-radius: 1rem; box-shadow: var(--shadow); padding: 1rem; }
+    .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .kpi { border-radius: 1rem; padding: .9rem .85rem; background: var(--surface); box-shadow: var(--shadow); }
+    .kpi .lbl { font-size: .75rem; color: var(--muted); }
+    .kpi .val { margin-top: .2rem; font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .kpi.gain { background: var(--gain-soft); }
+    .kpi.gain .val { color: var(--gain); }
+    .kpi.loss { background: var(--loss-soft); }
+    .kpi.loss .val { color: var(--loss); }
+    .kpi.warn { background: var(--warn-soft); }
+    .kpi.warn .val { color: var(--warn); }
+    .seg { display: grid; grid-auto-flow: column; background: var(--surface-2); border-radius: .75rem; padding: .2rem; }
+    .seg button {
+      height: 2.4rem; border: 0; background: transparent; color: var(--muted);
+      border-radius: .55rem; font-size: .875rem; font-weight: 500;
+    }
+    .seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(26,25,22,.06); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+      border: 0; border-radius: .7rem; height: 2.5rem; padding: 0 .9rem;
+      background: var(--primary); color: var(--primary-fg); font-weight: 600; font-size: .875rem;
+    }
+    .btn.ghost { background: transparent; color: var(--ink); }
+    .btn.soft { background: var(--surface-2); color: var(--ink); }
+    .btn.danger { background: var(--loss); color: #fff8f6; }
+    .btn.wide { width: 100%; }
+    .icon-btn {
+      width: 2.5rem; height: 2.5rem; border: 0; border-radius: .7rem;
+      background: transparent; color: var(--ink); display: grid; place-items: center;
+    }
+    nav.tabbar {
+      position: fixed; inset-inline: 0; bottom: 0; z-index: 30;
+      background: color-mix(in srgb, var(--surface) 95%, transparent);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--line);
+      padding-bottom: var(--safe-b);
+    }
+    nav.tabbar .inner { max-width: 32rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+    nav.tabbar a {
+      min-height: 3.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: .15rem; font-size: .75rem; font-weight: 500; color: var(--muted);
+    }
+    nav.tabbar a.on { color: var(--primary); }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+    .row:last-child { border-bottom: 0; }
+    .muted { color: var(--muted); font-size: .8rem; }
+    .subtle { color: var(--subtle); }
+    .chip {
+      display: inline-flex; align-items: center; height: 1.5rem; padding: 0 .5rem;
+      border-radius: 999px; font-size: .7rem; font-weight: 600; background: var(--surface-2); color: var(--muted);
+    }
+    .chip.ok { background: var(--gain-soft); color: var(--gain); }
+    .chip.warn { background: var(--warn-soft); color: var(--warn); }
+    .chip.bad { background: var(--loss-soft); color: var(--loss); }
+    .list { display: flex; flex-direction: column; gap: .65rem; }
+    .item {
+      background: var(--surface); border-radius: 1rem; box-shadow: var(--shadow);
+      padding: .9rem 1rem; display: block;
+    }
+    .search {
+      width: 100%; height: 2.6rem; border: 1px solid var(--line); border-radius: .75rem;
+      background: var(--surface); padding: 0 .9rem; font-size: 1rem; color: var(--ink);
+    }
+    .filters { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .15rem; }
+    .filters button {
+      flex: 0 0 auto; height: 2rem; padding: 0 .7rem; border: 0; border-radius: 999px;
+      background: var(--surface-2); color: var(--muted); font-size: .8rem; font-weight: 500;
+    }
+    .filters button.on { background: var(--primary); color: var(--primary-fg); }
+    .bars { display: flex; align-items: flex-end; gap: .45rem; height: 7.5rem; direction: ltr; }
+    .bars .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: .2rem; height: 100%; }
+    .bars .pair { display: flex; align-items: flex-end; gap: 2px; height: 100%; }
+    .bars .in, .bars .out { width: 50%; border-radius: 3px 3px 0 0; min-height: 2px; }
+    .bars .in { background: var(--gain); }
+    .bars .out { background: var(--loss); }
+    .bars .m { font-size: .62rem; color: var(--subtle); text-align: center; }
+    .field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .8rem; }
+    .field label { font-size: .8rem; font-weight: 600; }
+    .field input, .field select, .field textarea {
+      width: 100%; border: 1px solid var(--line); border-radius: .7rem;
+      background: var(--bg); color: var(--ink); padding: .65rem .75rem; font-size: 1rem;
+    }
+    .field textarea { min-height: 4.5rem; resize: vertical; }
+    .sheet { position: fixed; inset: 0; z-index: 50; display: none; }
+    .sheet.show { display: block; }
+    .sheet .back { position: absolute; inset: 0; background: rgba(26,25,22,.35); }
+    .sheet .panel {
+      position: absolute; inset-inline: 0; bottom: 0; max-height: 92dvh; overflow: auto;
+      background: var(--surface); border-radius: 1.25rem 1.25rem 0 0;
+      padding: 1rem 1rem calc(1rem + var(--safe-b));
+      max-width: 32rem; margin: 0 auto; left: 0; right: 0;
+    }
+    .handle { width: 2.5rem; height: .3rem; background: var(--line); border-radius: 99px; margin: 0 auto .8rem; }
+    .progress { height: .4rem; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+    .progress > i { display: block; height: 100%; background: var(--primary); }
+    .back-link { display: inline-flex; align-items: center; gap: .2rem; color: var(--muted); font-size: .875rem; }
+    .empty { text-align: center; padding: 2rem 1rem; color: var(--muted); }
+    .money-in { color: var(--gain); }
+    .money-out { color: var(--loss); }
+    .report h2 { margin: .25rem 0 0; font-size: 1.1rem; text-align: center; }
+    .report .cap { text-align: center; font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
+    @media print {
+      nav.tabbar, header.top .icon-btn, .btn, .seg { display: none !important; }
+      .page { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="view" class="page"></div>
+    <nav class="tabbar">
+      <div class="inner" id="tabs"></div>
+    </nav>
+  </div>
+  <div class="sheet" id="sheet">
+    <div class="back" onclick="closeSheet()"></div>
+    <div class="panel" id="sheetPanel"></div>
+  </div>
+  <script>
+const KEY = "daftar-almuqawil-html-v1";
+const CURRENCY = { EGP: "ج.م", SAR: "ر.س", AED: "د.إ" };
+const STATUS = { planning: "تخطيط", in_progress: "جاري التنفيذ", completed: "مكتمل", on_hold: "متوقف" };
+const METHOD = { cash: "نقدي", bank: "تحويل بنكي", cheque: "شيك", wallet: "محفظة" };
+const CAT = { materials: "خامات ومواد", labor: "عمالة", transport: "نقل", tools: "عدد وأدوات", rent: "إيجار", other: "أخرى" };
+const PERIOD = { month: "هذا الشهر", year: "هذه السنة", all: "كل الفترة" };
+const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+
+const DEMO = {
+  settings: { companyName: "مؤسسة النور للتشطيبات", ownerName: "محمود عبد الرحمن", phone: "01023456789", openingCapital: 180000, currency: "EGP" },
+  customers: [
+    { id: "c_ahmed", name: "أحمد محمود السيد", phone: "01098765432", address: "التجمع الخامس، القاهرة الجديدة", notes: "عميل شقة كاملة التشطيب", createdAt: "2026-01-12" },
+    { id: "c_fatima", name: "فاطمة حسن علي", phone: "01234567890", address: "الساحل الشمالي، سيدي عبد الرحمن", notes: "فيلا صيفي — تشطيب فاخر", createdAt: "2026-03-04" },
+    { id: "c_amal", name: "شركة الأمل العقارية", phone: "0225678901", address: "مدينة نصر، شارع عباس العقاد", notes: "محل تجاري دور أرضي", createdAt: "2026-05-20" }
+  ],
+  projects: [
+    { id: "p_tagamoa", customerId: "c_ahmed", name: "شقة 120م — التجمع الخامس", location: "كمبوند ليان، التجمع الخامس", contractAmount: 420000, startDate: "2026-02-01", status: "in_progress", notes: "تشطيب كامل: سباكة، كهرباء، أرضيات، دهانات، مطبخ.", createdAt: "2026-01-18" },
+    { id: "p_sahel", customerId: "c_fatima", name: "فيلا الساحل الشمالي", location: "سيدي عبد الرحمن، الكيلو 134", contractAmount: 890000, startDate: "2026-03-15", status: "in_progress", notes: "تشطيب الواجهات والحديقة والطابق الأرضي.", createdAt: "2026-03-08" },
+    { id: "p_nasr", customerId: "c_amal", name: "محل تجاري — مدينة نصر", location: "عباس العقاد، مدينة نصر", contractAmount: 175000, startDate: "2026-06-01", status: "completed", notes: "تسليم تم في أغسطس. ضمان سنة على الكهرباء.", createdAt: "2026-05-22" }
+  ],
+  payments: [
+    { id: "pay_1", projectId: "p_tagamoa", amount: 120000, date: "2026-02-03", method: "bank", notes: "دفعة تعاقد" },
+    { id: "pay_2", projectId: "p_tagamoa", amount: 90000, date: "2026-05-11", method: "cash", notes: "بعد السباكة والكهرباء" },
+    { id: "pay_3", projectId: "p_sahel", amount: 250000, date: "2026-03-18", method: "bank", notes: "دفعة أولى" },
+    { id: "pay_4", projectId: "p_sahel", amount: 180000, date: "2026-07-02", method: "cheque", notes: "شيك شهر يوليو" },
+    { id: "pay_5", projectId: "p_nasr", amount: 80000, date: "2026-06-04", method: "bank", notes: "تعاقد" },
+    { id: "pay_6", projectId: "p_nasr", amount: 95000, date: "2026-08-20", method: "wallet", notes: "دفعة التسليم" }
+  ],
+  expenses: [
+    { id: "ex_1", projectId: "p_tagamoa", category: "materials", amount: 64000, date: "2026-02-10", vendor: "معرض السيراميك الحديث", notes: "أرضيات حمامات ومطبخ" },
+    { id: "ex_2", projectId: "p_tagamoa", category: "labor", amount: 38000, date: "2026-04-02", vendor: "مقاول العمالة اليومية", notes: "محارة ودهان" },
+    { id: "ex_3", projectId: "p_sahel", category: "materials", amount: 145000, date: "2026-04-12", vendor: "شركة الرخام المصري", notes: "رخام الواجهة والسلالم" },
+    { id: "ex_4", projectId: "p_sahel", category: "transport", amount: 18000, date: "2026-04-14", vendor: "نقل مواد الساحل", notes: "نقل رخام للساحل" },
+    { id: "ex_5", projectId: "p_nasr", category: "materials", amount: 42000, date: "2026-06-08", vendor: "تشطيبات النور — مخزن", notes: "جبس بورد وإضاءة" },
+    { id: "ex_6", projectId: "p_nasr", category: "labor", amount: 27000, date: "2026-07-15", vendor: "ورشة التشطيب", notes: "عمالة المحل" },
+    { id: "ex_7", projectId: null, category: "rent", amount: 24000, date: "2026-01-05", vendor: "مالك المخزن", notes: "إيجار مخزن الربع الأول" },
+    { id: "ex_8", projectId: null, category: "tools", amount: 9600, date: "2026-03-01", vendor: "عدة البناء", notes: "شنيور وعدة كهرباء" }
+  ]
+};
+
+const EMPTY = {
+  settings: { companyName: "شركتي للمقاولات", ownerName: "", phone: "", openingCapital: 0, currency: "EGP" },
+  customers: [], projects: [], payments: [], expenses: []
+};
+
+let state = load();
+let ui = { period: "year", reportTab: "income", projFilter: "all", q: "" };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return structuredClone(DEMO);
+    const d = JSON.parse(raw);
+    return {
+      settings: { ...EMPTY.settings, ...d.settings },
+      customers: d.customers || [],
+      projects: d.projects || [],
+      payments: d.payments || [],
+      expenses: d.expenses || []
+    };
+  } catch { return structuredClone(DEMO); }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(p) { return p + "_" + Math.random().toString(36).slice(2, 9); }
+function today() { return new Date().toISOString().slice(0, 10); }
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" }[c]));
+}
+function money(n, cur) {
+  const c = cur || state.settings.currency;
+  const sign = n < 0 ? "−" : "";
+  return sign + Math.abs(Math.round(n)).toLocaleString("en-EG") + " " + CURRENCY[c];
+}
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
+  return (d && m && y) ? d + "/" + m + "/" + y : iso;
+}
+function inPeriod(iso, period) {
+  if (period === "all") return true;
+  const [y, m] = (iso || "").split("-").map(Number);
+  const now = new Date();
+  if (period === "year") return y === now.getFullYear();
+  return y === now.getFullYear() && m === now.getMonth() + 1;
+}
+function customerName(id) { return state.customers.find((c) => c.id === id)?.name || "عميل"; }
+function projectName(id) { return state.projects.find((p) => p.id === id)?.name || "مشروع"; }
+function projectTotals(p) {
+  const collected = state.payments.filter((x) => x.projectId === p.id).reduce((s, x) => s + x.amount, 0);
+  const spent = state.expenses.filter((x) => x.projectId === p.id).reduce((s, x) => s + x.amount, 0);
+  const remaining = Math.max(p.contractAmount - collected, 0);
+  const progress = p.contractAmount <= 0 ? 0 : Math.min(100, Math.round((collected / p.contractAmount) * 100));
+  return { collected, spent, remaining, cashProfit: collected - spent, expectedProfit: p.contractAmount - spent, progress };
+}
+function statusChip(st) {
+  const cls = st === "completed" ? "ok" : st === "on_hold" ? "bad" : st === "in_progress" ? "warn" : "";
+  return `<span class="chip ${cls}">${STATUS[st] || st}</span>`;
+}
+function path() {
+  const h = (location.hash || "#/").replace(/^#/, "");
+  return h.startsWith("/") ? h : "/" + h;
+}
+function go(to) { location.hash = to; }
+
+function incomeStatement(period) {
+  const revenue = state.projects.filter((p) => inPeriod(p.startDate, period)).reduce((s, p) => s + p.contractAmount, 0);
+  const collected = state.payments.filter((p) => inPeriod(p.date, period)).reduce((s, p) => s + p.amount, 0);
+  const pe = state.expenses.filter((e) => inPeriod(e.date, period));
+  const expensesTotal = pe.reduce((s, e) => s + e.amount, 0);
+  const byCategory = Object.keys(CAT).map((category) => ({
+    category, amount: pe.filter((e) => e.category === category).reduce((s, e) => s + e.amount, 0)
+  })).filter((r) => r.amount > 0);
+  const overhead = pe.filter((e) => !e.projectId).reduce((s, e) => s + e.amount, 0);
+  return { revenue, collected, expensesTotal, byCategory, netProfit: revenue - expensesTotal, overhead };
+}
+function balanceSheet() {
+  const collected = state.payments.reduce((s, p) => s + p.amount, 0);
+  const spent = state.expenses.reduce((s, e) => s + e.amount, 0);
+  const cash = state.settings.openingCapital + collected - spent;
+  const contractTotal = state.projects.reduce((s, p) => s + p.contractAmount, 0);
+  const receivables = Math.max(contractTotal - collected, 0);
+  const capital = state.settings.openingCapital;
+  const retained = contractTotal - spent;
+  return { cash, receivables, totalAssets: cash + receivables, capital, retained, totalEquity: capital + retained };
+}
+function monthlySeries() {
+  const now = new Date();
+  const keys = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"));
+  }
+  const max = 1;
+  const rows = keys.map((key) => ({
+    key,
+    collected: state.payments.filter((p) => p.date.startsWith(key)).reduce((s, p) => s + p.amount, 0),
+    spent: state.expenses.filter((e) => e.date.startsWith(key)).reduce((s, e) => s + e.amount, 0)
+  }));
+  const peak = Math.max(1, ...rows.flatMap((r) => [r.collected, r.spent]));
+  return { rows, peak };
+}
+
+function icon(name) {
+  const p = 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  const map = {
+    home: `<path ${p} d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/>`,
+    folder: `<path ${p} d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>`,
+    wallet: `<path ${p} d="M3 8h18v11H3zM3 8l2.5-4h13L21 8"/><circle cx="16.5" cy="13.5" r="1"/>`,
+    sheet: `<path ${p} d="M8 4h8l5 5v11H8z"/><path ${p} d="M16 4v5h5M11 13h6M11 17h6"/>`,
+    cog: `<circle ${p} cx="12" cy="12" r="3"/><path ${p} d="M12 3v2M12 19v2M4.2 6.2l1.4 1.4M18.4 16.4l1.4 1.4M3 12h2M19 12h2M4.2 17.8l1.4-1.4M18.4 7.6l1.4-1.4"/>`,
+    plus: `<path ${p} d="M12 5v14M5 12h14"/>`,
+    users: `<path ${p} d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle ${p} cx="9" cy="7" r="3"/><path ${p} d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>`,
+    back: `<path ${p} d="M9 6l6 6-6 6"/>`
+  };
+  return `<svg width="20" height="20" viewBox="0 0 24 24">${map[name] || ""}</svg>`;
+}
+
+function tabs() {
+  const p = path();
+  const items = [
+    ["/", "الرئيسية", "home"],
+    ["/projects", "المشاريع", "folder"],
+    ["/money", "الخزينة", "wallet"],
+    ["/reports", "التقارير", "sheet"]
+  ];
+  document.getElementById("tabs").innerHTML = items.map(([to, label, ic]) => {
+    const on = to === "/" ? p === "/" : p === to || p.startsWith(to + "/");
+    return `<a href="#${to}" class="${on ? "on" : ""}">${icon(ic)}<span>${label}</span></a>`;
+  }).join("");
+}
+
+function header(title, sub, action) {
+  return `<header class="top"><div><h1>${esc(title)}</h1>${sub ? `<p>${esc(sub)}</p>` : ""}</div>${action || ""}</header>`;
+}
+function periodToggle() {
+  return `<div class="seg">${["month","year","all"].map((k) =>
+    `<button class="${ui.period === k ? "on" : ""}" onclick="ui.period='${k}';render()">${PERIOD[k]}</button>`
+  ).join("")}</div>`;
+}
+
+function viewHome() {
+  const s = state.settings;
+  const collected = state.payments.filter((p) => inPeriod(p.date, ui.period)).reduce((a, p) => a + p.amount, 0);
+  const spent = state.expenses.filter((e) => inPeriod(e.date, ui.period)).reduce((a, e) => a + e.amount, 0);
+  const profit = collected - spent;
+  const cash = s.openingCapital + state.payments.reduce((a, p) => a + p.amount, 0) - state.expenses.reduce((a, e) => a + e.amount, 0);
+  const due = state.projects.reduce((sum, p) => sum + projectTotals(p).remaining, 0);
+  const series = monthlySeries();
+  const recent = [
+    ...state.payments.map((p) => ({ id: p.id, kind: "in", title: projectName(p.projectId), amount: p.amount, date: p.date })),
+    ...state.expenses.map((e) => ({ id: e.id, kind: "out", title: e.vendor || "مصروف", amount: e.amount, date: e.date }))
+  ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const active = state.projects.filter((p) => p.status === "in_progress").slice(0, 3);
+  const bars = series.rows.map((r) => {
+    const ih = Math.round((r.collected / series.peak) * 100);
+    const oh = Math.round((r.spent / series.peak) * 100);
+    const m = MONTHS[Number(r.key.slice(5)) - 1].slice(0, 3);
+    return `<div class="col"><div class="pair"><div class="in" style="height:${ih}%"></div><div class="out" style="height:${oh}%"></div></div><div class="m">${m}</div></div>`;
+  }).join("");
+  return header(s.companyName, "دفتر المقاول — حسابات التشطيبات",
+    `<a class="icon-btn" href="#/settings" aria-label="الإعدادات">${icon("cog")}</a>`) +
+    `<div class="content">
+      ${periodToggle()}
+      <section class="kpis">
+        <div class="kpi gain"><div class="lbl">التحصيل</div><div class="val">${money(collected)}</div></div>
+        <div class="kpi loss"><div class="lbl">المصروفات</div><div class="val">${money(spent)}</div></div>
+        <div class="kpi ${profit >= 0 ? "gain" : "loss"}"><div class="lbl">${profit >= 0 ? "صافي الربح" : "صافي الخسارة"}</div><div class="val">${money(profit)}</div></div>
+        <div class="kpi warn"><div class="lbl">مستحق من العملاء</div><div class="val">${money(due)}</div></div>
+      </section>
+      <section class="card">
+        <div class="row" style="border:0;padding:0 0 .6rem">
+          <strong>حركة الصندوق</strong>
+          <span class="muted">الرصيد: <b>${money(cash)}</b></span>
+        </div>
+        <div class="bars">${bars}</div>
+      </section>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+        <button class="btn" onclick="openPayment()">${icon("plus")} دفعة</button>
+        <button class="btn soft" onclick="openExpense()">مصروف</button>
+        <a class="btn soft" href="#/customers">${icon("users")} عملاء</a>
+      </div>
+      ${active.length ? `<section><div class="row" style="border:0;padding:0 0 .5rem"><strong>مشاريع جارية</strong><a class="muted" href="#/projects">الكل</a></div>
+        <div class="list">${active.map(projectCard).join("")}</div></section>` : ""}
+      <section class="card">
+        <strong>آخر الحركات</strong>
+        ${recent.length ? recent.map((r) => `<div class="row"><div><div>${esc(r.title)}</div><div class="muted">${fmtDate(r.date)}</div></div>
+          <b class="${r.kind === "in" ? "money-in" : "money-out"}">${r.kind === "in" ? "+" : "−"} ${money(r.amount)}</b></div>`).join("") : `<p class="empty">لا توجد حركات بعد</p>`}
+      </section>
+    </div>`;
+}
+
+function projectCard(p) {
+  const t = projectTotals(p);
+  const c = customerName(p.customerId);
+  return `<a class="item" href="#/projects/${p.id}">
+    <div class="row" style="border:0;padding:0">
+      <div><b>${esc(p.name)}</b><div class="muted">${esc(c)} · ${esc(p.location)}</div></div>
+      ${statusChip(p.status)}
+    </div>
+    <div class="progress" style="margin:.7rem 0 .4rem"><i style="width:${t.progress}%"></i></div>
+    <div class="row" style="border:0;padding:0;font-size:.8rem">
+      <span class="muted">محصّل ${money(t.collected)}</span>
+      <span class="muted">متبقي ${money(t.remaining)}</span>
+    </div>
+  </a>`;
+}
+
+function viewProjects() {
+  const q = ui.q.trim();
+  const rows = state.projects.filter((p) => {
+    if (ui.projFilter !== "all" && p.status !== ui.projFilter) return false;
+    if (!q) return true;
+    return (p.name + " " + p.location + " " + customerName(p.customerId)).includes(q);
+  });
+  const filters = [["all","الكل"],["in_progress","جاري"],["completed","مكتمل"],["planning","تخطيط"],["on_hold","متوقف"]];
+  return header("المشاريع", state.projects.length + " مشروع",
+    `<button class="btn" onclick="openProject()">${icon("plus")} جديد</button>`) +
+    `<div class="content">
+      <input class="search" placeholder="بحث بالمشروع أو العميل" value="${esc(ui.q)}" oninput="ui.q=this.value;render()" />
+      <div class="filters">${filters.map(([id,l]) => `<button class="${ui.projFilter===id?"on":""}" onclick="ui.projFilter='${id}';render()">${l}</button>`).join("")}</div>
+      ${rows.length ? `<div class="list">${rows.map(projectCard).join("")}</div>` : `<div class="empty">لا توجد مشاريع مطابقة</div>`}
+    </div>`;
+}
+
+function viewProject(id) {
+  const p = state.projects.find((x) => x.id === id);
+  if (!p) return header("مشروع") + `<div class="content"><div class="empty">المشروع غير موجود</div></div>`;
+  const t = projectTotals(p);
+  const pays = state.payments.filter((x) => x.projectId === id);
+  const exps = state.expenses.filter((x) => x.projectId === id);
+  return header(p.name, customerName(p.customerId) + " · " + p.location,
+    `<button class="icon-btn" onclick="openProject('${p.id}')">${icon("cog")}</button>`) +
+    `<div class="content">
+      <a class="back-link" href="#/projects">${icon("back")} كل المشاريع</a>
+      <section class="kpis">
+        <div class="kpi"><div class="lbl">قيمة العقد</div><div class="val">${money(p.contractAmount)}</div></div>
+        <div class="kpi gain"><div class="lbl">محصّل</div><div class="val">${money(t.collected)}</div></div>
+        <div class="kpi warn"><div class="lbl">متبقي</div><div class="val">${money(t.remaining)}</div></div>
+        <div class="kpi ${t.cashProfit>=0?"gain":"loss"}"><div class="lbl">ربح نقدي</div><div class="val">${money(t.cashProfit)}</div></div>
+      </section>
+      <div class="progress"><i style="width:${t.progress}%"></i></div>
+      <p class="muted">${statusChip(p.status)} · بدأ ${fmtDate(p.startDate)}</p>
+      ${p.notes ? `<div class="card muted">${esc(p.notes)}</div>` : ""}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+        <button class="btn" onclick="openPayment('${id}')">تسجيل دفعة</button>
+        <button class="btn soft" onclick="openExpense('${id}')">تسجيل مصروف</button>
+      </div>
+      <section class="card"><strong>الدفعات</strong>
+        ${pays.length ? pays.map((x) => `<div class="row"><div><div>${METHOD[x.method]} · ${fmtDate(x.date)}</div><div class="muted">${esc(x.notes||"")}</div></div>
+          <b class="money-in">${money(x.amount)}</b></div>`).join("") : `<p class="muted">لا دفعات بعد</p>`}
+      </section>
+      <section class="card"><strong>المصروفات</strong>
+        ${exps.length ? exps.map((x) => `<div class="row"><div><div>${CAT[x.category]} · ${fmtDate(x.date)}</div><div class="muted">${esc(x.vendor||"")}</div></div>
+          <b class="money-out">${money(x.amount)}</b></div>`).join("") : `<p class="muted">لا مصروفات بعد</p>`}
+      </section>
+    </div>`;
+}
+
+function viewMoney() {
+  const pays = [...state.payments].sort((a,b)=>b.date.localeCompare(a.date));
+  const exps = [...state.expenses].sort((a,b)=>b.date.localeCompare(a.date));
+  return header("الخزينة", "الدفعات والمصروفات",
+    `<button class="btn" onclick="openPayment()">${icon("plus")}</button>`) +
+    `<div class="content">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+        <button class="btn" onclick="openPayment()">دفعة من عميل</button>
+        <button class="btn soft" onclick="openExpense()">مصروف جديد</button>
+      </div>
+      <section class="card"><strong>تحصيلات</strong>
+        ${pays.length ? pays.map((x) => `<div class="row"><div><div>${esc(projectName(x.projectId))}</div><div class="muted">${METHOD[x.method]} · ${fmtDate(x.date)}</div></div>
+          <b class="money-in">${money(x.amount)}</b></div>`).join("") : `<p class="muted">لا تحصيلات</p>`}
+      </section>
+      <section class="card"><strong>مصروفات</strong>
+        ${exps.length ? exps.map((x) => `<div class="row"><div><div>${esc(x.vendor || CAT[x.category])}</div><div class="muted">${CAT[x.category]} · ${x.projectId ? esc(projectName(x.projectId)) : "مصروف عام"} · ${fmtDate(x.date)}</div></div>
+          <b class="money-out">${money(x.amount)}</b></div>`).join("") : `<p class="muted">لا مصروفات</p>`}
+      </section>
+    </div>`;
+}
+
+function viewReports() {
+  const inc = incomeStatement(ui.period);
+  const bal = balanceSheet();
+  const cur = state.settings.currency;
+  const line = (l, v, muted) => `<div class="row ${muted?"subtle":""}"><span>${l}</span><b>${v}</b></div>`;
+  const income = `<article class="card report">
+      <div class="cap">قائمة الدخل والأرباح والخسائر</div>
+      <h2>${esc(state.settings.companyName)}</h2>
+      <p class="cap">${PERIOD[ui.period]}</p>
+      ${line("إيرادات المشاريع (قيمة العقود)", money(inc.revenue, cur))}
+      ${line("منها محصّل نقدًا", money(inc.collected, cur), true)}
+      ${line("إجمالي المصروفات", money(inc.expensesTotal, cur))}
+      ${inc.byCategory.map((r) => line("— " + CAT[r.category], money(r.amount, cur), true)).join("")}
+      ${line("مصروفات عامة (بدون مشروع)", money(inc.overhead, cur), true)}
+      <div class="row"><span><b>${inc.netProfit >= 0 ? "صافي الربح" : "صافي الخسارة"}</b></span>
+        <b class="${inc.netProfit>=0?"money-in":"money-out"}">${money(inc.netProfit, cur)}</b></div>
+    </article>`;
+  const sheet = `<article class="card report">
+      <div class="cap">الميزانية / المركز المالي</div>
+      <h2>${esc(state.settings.companyName)}</h2>
+      <p class="cap">حتى اليوم</p>
+      <p class="muted" style="margin:.6rem 0 0">الأصول</p>
+      ${line("النقدية (الصندوق والبنك)", money(bal.cash, cur))}
+      ${line("ذمم العملاء (متبقي العقود)", money(bal.receivables, cur))}
+      ${line("إجمالي الأصول", money(bal.totalAssets, cur))}
+      <p class="muted" style="margin:.6rem 0 0">حقوق الملكية</p>
+      ${line("رأس المال الافتتاحي", money(bal.capital, cur))}
+      ${line("أرباح محتجزة / نتيجة الأعمال", money(bal.retained, cur))}
+      ${line("إجمالي حقوق الملكية", money(bal.totalEquity, cur))}
+    </article>`;
+  return header("التقارير", state.settings.companyName + " · " + PERIOD[ui.period]) +
+    `<div class="content">
+      ${periodToggle()}
+      <div class="seg">
+        <button class="${ui.reportTab==="income"?"on":""}" onclick="ui.reportTab='income';render()">قائمة الدخل</button>
+        <button class="${ui.reportTab==="balance"?"on":""}" onclick="ui.reportTab='balance';render()">الميزانية</button>
+      </div>
+      ${ui.reportTab === "income" ? income : sheet}
+      <button class="btn soft wide" onclick="window.print()">طباعة / حفظ PDF</button>
+    </div>`;
+}
+
+function viewCustomers() {
+  return header("العملاء", state.customers.length + " عميل",
+    `<button class="btn" onclick="openCustomer()">${icon("plus")} جديد</button>`) +
+    `<div class="content">
+      <a class="back-link" href="#/">${icon("back")} الرئيسية</a>
+      ${state.customers.length ? `<div class="list">${state.customers.map((c) => {
+        const due = state.projects.filter((p)=>p.customerId===c.id).reduce((s,p)=>s+projectTotals(p).remaining,0);
+        const n = state.projects.filter((p)=>p.customerId===c.id).length;
+        return `<div class="item"><div class="row" style="border:0;padding:0"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.phone)} · ${esc(c.address)}</div></div>
+          <button class="btn ghost" onclick="openCustomer('${c.id}')">تعديل</button></div>
+          <div class="muted" style="margin-top:.4rem">${n} مشروع · مستحق ${money(due)}</div></div>`;
+      }).join("")}</div>` : `<div class="empty">أضف أول عميل</div>`}
+    </div>`;
+}
+
+function viewSettings() {
+  const s = state.settings;
+  return header("الإعدادات", "بيانات الشركة والدفاتر") +
+    `<div class="content">
+      <a class="back-link" href="#/">${icon("back")} الرئيسية</a>
+      <section class="card">
+        <strong>بيانات الشركة</strong>
+        <div class="field" style="margin-top:.8rem"><label>اسم الشركة</label><input value="${esc(s.companyName)}" onchange="state.settings.companyName=this.value;save();render()" /></div>
+        <div class="field"><label>اسم صاحب العمل</label><input value="${esc(s.ownerName)}" onchange="state.settings.ownerName=this.value;save()" /></div>
+        <div class="field"><label>الهاتف</label><input dir="ltr" value="${esc(s.phone)}" onchange="state.settings.phone=this.value;save()" /></div>
+        <div class="field"><label>رأس المال الافتتاحي</label><input dir="ltr" inputmode="numeric" value="${s.openingCapital}" onchange="state.settings.openingCapital=Number(this.value)||0;save();render()" /></div>
+        <div class="field"><label>العملة</label>
+          <select onchange="state.settings.currency=this.value;save();render()">
+            ${Object.keys(CURRENCY).map((k)=>`<option value="${k}" ${s.currency===k?"selected":""}>${CURRENCY[k]} (${k})</option>`).join("")}
+          </select>
+        </div>
+      </section>
+      <section class="card">
+        <strong>البيانات</strong>
+        <p class="muted">البرنامج يحفظ على هذا المتصفح فقط. صدّر نسخة احتياطية لو هتغير الموبايل.</p>
+        <button class="btn wide" style="margin-top:.5rem" onclick="exportData()">تصدير نسخة JSON</button>
+        <button class="btn soft wide" style="margin-top:.5rem" onclick="document.getElementById('imp').click()">استيراد نسخة</button>
+        <input id="imp" type="file" accept="application/json" hidden onchange="importData(event)" />
+        <button class="btn soft wide" style="margin-top:.5rem" onclick="if(confirm('تحميل البيانات التجريبية؟')){state=structuredClone(DEMO);save();render()}">تحميل بيانات تجريبية</button>
+        <button class="btn danger wide" style="margin-top:.5rem" onclick="if(confirm('مسح كل البيانات؟')){state=structuredClone(EMPTY);save();render()}">مسح الدفتر</button>
+      </section>
+      <p class="muted" style="text-align:center">دفتر المقاول — يعمل من المتصفح بدون تثبيت</p>
+    </div>`;
+}
+
+function closeSheet() { document.getElementById("sheet").classList.remove("show"); }
+function openSheet(html) {
+  document.getElementById("sheetPanel").innerHTML = `<div class="handle"></div>` + html;
+  document.getElementById("sheet").classList.add("show");
+}
+function val(id) { return document.getElementById(id).value; }
+function num(id) { return Number(val(id)) || 0; }
+
+function openCustomer(id) {
+  const c = state.customers.find((x) => x.id === id) || { name:"", phone:"", address:"", notes:"" };
+  openSheet(`<h2>${id ? "تعديل عميل" : "عميل جديد"}</h2>
+    <div class="field"><label>الاسم</label><input id="f_name" value="${esc(c.name)}" /></div>
+    <div class="field"><label>الهاتف</label><input id="f_phone" dir="ltr" value="${esc(c.phone)}" /></div>
+    <div class="field"><label>العنوان</label><input id="f_addr" value="${esc(c.address)}" /></div>
+    <div class="field"><label>ملاحظات</label><textarea id="f_notes">${esc(c.notes)}</textarea></div>
+    <button class="btn wide" onclick="saveCustomer('${id||""}')">حفظ</button>
+    ${id ? `<button class="btn danger wide" style="margin-top:.5rem" onclick="delCustomer('${id}')">حذف العميل ومشاريعه</button>` : ""}`);
+}
+function saveCustomer(id) {
+  const row = { name: val("f_name"), phone: val("f_phone"), address: val("f_addr"), notes: val("f_notes") };
+  if (!row.name.trim()) return alert("اكتب اسم العميل");
+  if (id) {
+    state.customers = state.customers.map((c) => c.id === id ? { ...c, ...row } : c);
+  } else {
+    state.customers.unshift({ ...row, id: uid("c"), createdAt: today() });
+  }
+  save(); closeSheet(); render();
+}
+function delCustomer(id) {
+  if (!confirm("حذف العميل وكل مشاريعه؟")) return;
+  const pids = new Set(state.projects.filter((p) => p.customerId === id).map((p) => p.id));
+  state.customers = state.customers.filter((c) => c.id !== id);
+  state.projects = state.projects.filter((p) => p.customerId !== id);
+  state.payments = state.payments.filter((p) => !pids.has(p.projectId));
+  state.expenses = state.expenses.map((e) => pids.has(e.projectId) ? { ...e, projectId: null } : e);
+  save(); closeSheet(); go("/customers");
+}
+
+function openProject(id) {
+  const p = state.projects.find((x) => x.id === id) || { name:"", location:"", contractAmount:"", startDate: today(), status:"in_progress", notes:"", customerId: state.customers[0]?.id || "" };
+  const opts = state.customers.map((c) => `<option value="${c.id}" ${c.id===p.customerId?"selected":""}>${esc(c.name)}</option>`).join("");
+  if (!state.customers.length) { alert("أضف عميلًا أولًا"); go("/customers"); return; }
+  openSheet(`<h2>${id ? "تعديل مشروع" : "مشروع جديد"}</h2>
+    <div class="field"><label>العميل</label><select id="f_cust">${opts}</select></div>
+    <div class="field"><label>اسم المشروع</label><input id="f_name" value="${esc(p.name)}" /></div>
+    <div class="field"><label>الموقع</label><input id="f_loc" value="${esc(p.location)}" /></div>
+    <div class="field"><label>قيمة العقد</label><input id="f_amt" dir="ltr" inputmode="numeric" value="${p.contractAmount||""}" /></div>
+    <div class="field"><label>تاريخ البدء</label><input id="f_date" type="date" value="${p.startDate||today()}" /></div>
+    <div class="field"><label>الحالة</label><select id="f_st">${Object.keys(STATUS).map((k)=>`<option value="${k}" ${p.status===k?"selected":""}>${STATUS[k]}</option>`).join("")}</select></div>
+    <div class="field"><label>ملاحظات</label><textarea id="f_notes">${esc(p.notes||"")}</textarea></div>
+    <button class="btn wide" onclick="saveProject('${id||""}')">حفظ</button>
+    ${id ? `<button class="btn danger wide" style="margin-top:.5rem" onclick="delProject('${id}')">حذف المشروع</button>` : ""}`);
+}
+function saveProject(id) {
+  const row = { customerId: val("f_cust"), name: val("f_name"), location: val("f_loc"), contractAmount: num("f_amt"), startDate: val("f_date"), status: val("f_st"), notes: val("f_notes") };
+  if (!row.name.trim()) return alert("اكتب اسم المشروع");
+  if (id) state.projects = state.projects.map((p) => p.id === id ? { ...p, ...row } : p);
+  else state.projects.unshift({ ...row, id: uid("p"), createdAt: today() });
+  save(); closeSheet(); render();
+}
+function delProject(id) {
+  if (!confirm("حذف المشروع ودفعاته؟")) return;
+  state.projects = state.projects.filter((p) => p.id !== id);
+  state.payments = state.payments.filter((p) => p.projectId !== id);
+  state.expenses = state.expenses.map((e) => e.projectId === id ? { ...e, projectId: null } : e);
+  save(); closeSheet(); go("/projects");
+}
+
+function openPayment(projectId) {
+  if (!state.projects.length) { alert("أضف مشروعًا أولًا"); return; }
+  const pid = projectId || state.projects[0].id;
+  openSheet(`<h2>دفعة من عميل</h2>
+    <div class="field"><label>المشروع</label><select id="f_proj">${state.projects.map((p)=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select></div>
+    <div class="field"><label>المبلغ</label><input id="f_amt" dir="ltr" inputmode="numeric" /></div>
+    <div class="field"><label>التاريخ</label><input id="f_date" type="date" value="${today()}" /></div>
+    <div class="field"><label>طريقة الدفع</label><select id="f_m">${Object.keys(METHOD).map((k)=>`<option value="${k}">${METHOD[k]}</option>`).join("")}</select></div>
+    <div class="field"><label>ملاحظات</label><input id="f_notes" /></div>
+    <button class="btn wide" onclick="savePayment()">حفظ الدفعة</button>`);
+}
+function savePayment() {
+  const amount = num("f_amt");
+  if (amount <= 0) return alert("اكتب مبلغًا صحيحًا");
+  state.payments.unshift({ id: uid("pay"), projectId: val("f_proj"), amount, date: val("f_date"), method: val("f_m"), notes: val("f_notes") });
+  save(); closeSheet(); render();
+}
+function openExpense(projectId) {
+  openSheet(`<h2>مصروف</h2>
+    <div class="field"><label>المشروع</label><select id="f_proj"><option value="">مصروف عام</option>${state.projects.map((p)=>`<option value="${p.id}" ${p.id===projectId?"selected":""}>${esc(p.name)}</option>`).join("")}</select></div>
+    <div class="field"><label>التصنيف</label><select id="f_cat">${Object.keys(CAT).map((k)=>`<option value="${k}">${CAT[k]}</option>`).join("")}</select></div>
+    <div class="field"><label>المبلغ</label><input id="f_amt" dir="ltr" inputmode="numeric" /></div>
+    <div class="field"><label>التاريخ</label><input id="f_date" type="date" value="${today()}" /></div>
+    <div class="field"><label>المورد / الجهة</label><input id="f_vendor" /></div>
+    <div class="field"><label>ملاحظات</label><input id="f_notes" /></div>
+    <button class="btn wide" onclick="saveExpense()">حفظ المصروف</button>`);
+}
+function saveExpense() {
+  const amount = num("f_amt");
+  if (amount <= 0) return alert("اكتب مبلغًا صحيحًا");
+  state.expenses.unshift({ id: uid("ex"), projectId: val("f_proj") || null, category: val("f_cat"), amount, date: val("f_date"), vendor: val("f_vendor"), notes: val("f_notes") });
+  save(); closeSheet(); render();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "daftar-almuqawil.json";
+  a.click();
+}
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      state = {
+        settings: { ...EMPTY.settings, ...d.settings },
+        customers: d.customers || [],
+        projects: d.projects || [],
+        payments: d.payments || [],
+        expenses: d.expenses || []
+      };
+      save(); render();
+    } catch { alert("ملف غير صالح"); }
+  };
+  reader.readAsText(file);
+}
+
+function render() {
+  const p = path();
+  let html;
+  if (p === "/projects") html = viewProjects();
+  else if (p.startsWith("/projects/")) html = viewProject(p.split("/")[2]);
+  else if (p === "/money") html = viewMoney();
+  else if (p === "/reports") html = viewReports();
+  else if (p === "/customers") html = viewCustomers();
+  else if (p === "/settings") html = viewSettings();
+  else html = viewHome();
+  document.getElementById("view").innerHTML = html;
+  tabs();
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", render);
+if (!location.hash) location.hash = "#/";
+render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "دفتر المقاول",
+  "short_name": "دفتر المقاول",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3efe6",
+  "theme_color": "#1f4a40",
+  "description": "حسابات شركات المقاولات والتشطيبات الصغيرة"
+}
